@@ -2,7 +2,7 @@
 
 # Shor's Algorithm – Group Project
 
-This repository is for our group project on **Shor’s Algorithm** for our quantum computing class. We'll use this space to share code, collaborate, and track our progress.
+This repository is for our group project on **Shor’s Algorithm** for our quantum computing class EECS298. We'll use this space to share code, collaborate, and track our progress.
 
 ---
 
@@ -23,8 +23,8 @@ To use this repo:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/shors-algorithm-group-project.git
-   cd shors-algorithm-group-project
+   git clone https://github.com/radubach/shor_eecs298.git
+   cd shor_eecs298
    ```
 
 2. Install dependencies:
@@ -66,7 +66,7 @@ git push origin your_branch_name
 
 ### Step 7: Open a Pull Request
 
-Once your branch is pushed, go to the repo on GitHub:
+Once your branch is pushed, go to the repo on GitHub website:
 
 - Click **"Compare & pull request"**  
 - Write a short description of what you did  
