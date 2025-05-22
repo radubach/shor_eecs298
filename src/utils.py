@@ -2,7 +2,7 @@ import numpy as np
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import Operator
-from qiskit.extensions import UnitaryGate
+from qiskit.circuit.library import UnitaryGate
 from typing import List, Union, Tuple
 
 def modmul_matrix(a: int, power: int, N: int = 15) -> np.ndarray:
