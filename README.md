@@ -10,18 +10,23 @@ This repository is for our group project on **Shor’s Algorithm** for our quant
 
 Shor’s algorithm is a quantum algorithm that efficiently factors large integers—something classical algorithms struggle with. Our goals include:
 
-- Understanding the math behind Shor's algorithm  
-- Implementing it using Python and Qiskit (or another framework)  
-- Demonstrating it on small numbers (e.g., factoring 15 into 3 × 5)  
-- Explaining its implications for cryptography  
+- Understanding the math behind Shor's algorithm
+- Implementing it using Python and Qiskit (or another framework)
+- Demonstrating it on small numbers (e.g., factoring 15 into 3 × 5)
+- Explaining its implications for cryptography
 
 ---
+
+## Colab Notebooks
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yourname/shor_eecs298/blob/main/notebooks/shor_final.ipynb)
 
 ## 🛠️ Getting Started
 
 To use this repo:
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/radubach/shor_eecs298.git
    cd shor_eecs298
@@ -68,16 +73,16 @@ git push origin your_branch_name
 
 Once your branch is pushed, go to the repo on GitHub website:
 
-- Click **"Compare & pull request"**  
-- Write a short description of what you did  
+- Click **"Compare & pull request"**
+- Write a short description of what you did
 - (Optional) Ask a teammate to review before merging into `main`
 
 ---
 
 ## 💡 Tips
 
-- **Feel free to experiment!** Version control means nothing is permanent — we can undo or fix anything.  
-- **If you get stuck**, ask in the group chat or leave a comment in the repo.  
+- **Feel free to experiment!** Version control means nothing is permanent — we can undo or fix anything.
+- **If you get stuck**, ask in the group chat or leave a comment in the repo.
 - We can use **Issues** to track bugs or questions and the **Projects** tab if we want a kanban-style board.
 
 ---

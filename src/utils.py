@@ -1,5 +1,6 @@
 import numpy as np
-from qiskit import QuantumCircuit, Aer, transpile
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import AerSimulator
 from qiskit.quantum_info import Operator
 from qiskit.extensions import UnitaryGate
 from typing import List, Union, Tuple
@@ -136,7 +137,8 @@ def qpe_mod15(a: int) -> float:
     qc.measure(range(n_count), range(n_count))
 
     # Run the circuit
-    aer_sim = Aer.get_backend('aer_simulator')
+    # Run the circuit
+    aer_sim = AerSimulator()
     t_qc = transpile(qc, aer_sim)
     q_obj = aer_sim.run(t_qc, shots=1, memory=True)
     result = q_obj.result()
