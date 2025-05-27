@@ -1,9 +1,13 @@
 import numpy as np
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import Operator
-from qiskit.circuit.library import UnitaryGate
+from qiskit.circuit.library import UnitaryGate, QFT
 from typing import List, Union, Tuple
+from math import floor, log
+from fractions import Fraction
+
+
 
 def modmul_matrix(a: int, power: int, N: int = 15) -> np.ndarray:
     """
@@ -202,3 +206,53 @@ def find_factors(N: int = 15) -> Tuple[int, int]:
                     return (factor1, factor2)
     
     raise ValueError(f"Could not find factors for {N}")
+
+
+
+
+    #########################################################
+    # second iteration
+    #########################################################
+
+def mod_mult_gate(b, N):
+    n = floor(log(N - 1, 2)) + 1
+    U = np.zeros((2 ** n, 2 ** n))
+    for x in range(N):
+        U[b * x % N][x] = 1
+    for x in range(N, 2 ** n):
+        U[x][x] = 1
+    if not np.allclose(U.conj().T @ U, np.eye(U.shape[0])):
+        raise ValueError(f"Generated U matrix for b={b}, N={N} is not unitary!")
+    return UnitaryGate(U, label=f"M_{b}")
+
+def order_finding_circuit(a, N):
+    n = floor(log(N - 1, 2)) + 1
+    m = 2 * n
+    control = QuantumRegister(m, name="X")
+    target = QuantumRegister(n, name="Y")
+    output = ClassicalRegister(m, name="Z")
+    qc = QuantumCircuit(control, target, output)
+    qc.x(target[0])  # |1> in target register
+
+    for k, qubit in enumerate(control):
+        qc.h(qubit)
+        b = pow(a, 2 ** k, N)
+        qc.compose(mod_mult_gate(b, N).control(), [qubit] + list(target), inplace=True)
+
+    qc.compose(QFT(m, inverse=True), qubits=control, inplace=True)
+    qc.measure(control, output)
+    return qc
+
+def find_order_quantum(a, N):
+    n = floor(log(N - 1, 2)) + 1
+    m = 2 * n
+    qc = order_finding_circuit(a, N)
+    transpiled = transpile(qc, AerSimulator())
+    while True:
+        result = AerSimulator().run(transpiled, shots=1, memory=True).result()
+        y = int(result.get_memory()[0], 2)
+        r = Fraction(y / 2 ** m).limit_denominator(N).denominator
+        if r == 0:
+            continue
+        if pow(a, r, N) == 1:
+            return r, qc
