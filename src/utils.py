@@ -210,22 +210,63 @@ def find_factors(N: int = 15) -> Tuple[int, int]:
 
 
 
-    #########################################################
-    # second iteration
-    #########################################################
+#########################################################
+# second iteration
+#########################################################
 
-def mod_mult_gate(b, N):
-    n = floor(log(N - 1, 2)) + 1
-    U = np.zeros((2 ** n, 2 ** n))
+def mod_mult_gate(b: int, N: int) -> UnitaryGate:
+    """
+    Creates a unitary gate that implements modular multiplication by b modulo N.
+    
+    This function creates a quantum gate that performs the operation |x⟩ → |b*x mod N⟩.
+    The gate is constructed as a unitary matrix where each column represents the
+    transformation of a basis state.
+    
+    Args:
+        b (int): The multiplier in the modular multiplication
+        N (int): The modulus for the operation
+        n (int): The number of qubits in the target register
+                   needed to represent all possible numbers in 0 to N-1 
+        U (np.ndarray): The unitary matrix representing the modular multiplication
+    
+    Returns:
+        UnitaryGate: A Qiskit UnitaryGate implementing the modular multiplication
+    
+    Raises:
+        ValueError: If the generated matrix is not unitary
+    """
+    n = floor(log(N - 1, 2)) + 1  # determine number of qubits in output register
+    U = np.zeros((2 ** n, 2 ** n))  # initialize the unitary n x n matrix
     for x in range(N):
-        U[b * x % N][x] = 1
+        U[b * x % N][x] = 1 # apply the modular multiplication to each basis state
     for x in range(N, 2 ** n):
-        U[x][x] = 1
+        U[x][x] = 1 # if the target register is larger than N, set the extras to the identity
     if not np.allclose(U.conj().T @ U, np.eye(U.shape[0])):
         raise ValueError(f"Generated U matrix for b={b}, N={N} is not unitary!")
     return UnitaryGate(U, label=f"M_{b}")
 
-def order_finding_circuit(a, N):
+def order_finding_circuit(a: int, N: int) -> QuantumCircuit:
+    """
+    Creates a quantum circuit for finding the order of a modulo N.
+    
+    This circuit implements the quantum phase estimation algorithm to find
+    the order of a modulo N. It uses a control register of size 2n and a target
+    register of size n, where n is the number of bits needed to represent N-1.
+    
+    The circuit:
+    1. Initializes the target register to |1⟩
+    2. Applies Hadamard gates to the control register
+    3. Applies controlled modular multiplication gates
+    4. Applies inverse QFT
+    5. Measures the control register
+    
+    Args:
+        a (int): The base number whose order we want to find
+        N (int): The modulus
+    
+    Returns:
+        QuantumCircuit: A quantum circuit that can be used to find the order of a modulo N
+    """
     n = floor(log(N - 1, 2)) + 1
     m = 2 * n
     control = QuantumRegister(m, name="X")
@@ -243,7 +284,27 @@ def order_finding_circuit(a, N):
     qc.measure(control, output)
     return qc
 
-def find_order_quantum(a, N):
+def find_order_quantum(a: int, N: int) -> Tuple[int, QuantumCircuit]:
+    """
+    Finds the order of a modulo N using quantum computation.
+    
+    This function runs the order finding circuit multiple times until it finds
+    a valid order. The order is the smallest positive integer r such that
+    a^r ≡ 1 (mod N).
+    
+    Args:
+        a (int): The base number whose order we want to find
+        N (int): The modulus
+    
+    Returns:
+        Tuple[int, QuantumCircuit]: A tuple containing:
+            - The order r of a modulo N
+            - The quantum circuit used to find the order
+    
+    Note:
+        This function may need to be run multiple times to find a valid order,
+        as quantum measurements are probabilistic.
+    """
     n = floor(log(N - 1, 2)) + 1
     m = 2 * n
     qc = order_finding_circuit(a, N)

@@ -19,7 +19,10 @@ Shor’s algorithm is a quantum algorithm that efficiently factors large integer
 
 ## Colab Notebooks
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yourname/shor_eecs298/blob/main/notebooks/shor_final.ipynb)
+Notebook that runs qiskit code [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.
+google.com/drive/1sBf3nyACTdpnbdwpm-SnqV1_KtBmWeVM#scrollTo=0mhjzedT1Q62)
+
+Notebook that runs demo on standard computing [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1rkwGLca1b-1Yj_9WUru1sdVEtfXOW_07#scrollTo=cf1xbBavpM6s)
 
 ## 🛠️ Getting Started
 
