@@ -47,6 +47,12 @@ def create_unitary_gate(a: int, power: int, N: int = 15) -> UnitaryGate:
     U = modmul_matrix(a, power, N)
     return UnitaryGate(U)
 
+
+#########################################################
+# Note that this is not used in the final implementation
+# function uses non-standard convention for qubit ordering
+# standard convention is to have least significant qubit as the first one
+# #########################################################
 def c_amod15(a: int, power: int) -> UnitaryGate:
     """
     Creates a controlled modular multiplication gate for N=15.
@@ -87,6 +93,37 @@ def c_amod15(a: int, power: int) -> UnitaryGate:
     U.name = f"{a}^{power} mod 15"
     c_U = U.control()
     return c_U
+
+#########################################################
+# Note that this is not used in the final implementation
+# same as c_amod15 but uses standard qubit ordering
+# and only applies to a = 7
+# #########################################################
+def c_7mod15(power: int) -> UnitaryGate:
+    """
+    Creates a controlled modular multiplication gate for a = 7, N=15.
+    This is a specialized implementation for N=15 that uses SWAP and X gates.
+    
+    Args:
+        power (int): The power to raise 7 to
+    
+    Returns:
+        UnitaryGate: A controlled unitary gate implementing the modular multiplication
+    
+    """
+    
+    U = QuantumCircuit(4)
+    for iteration in range(power):
+        U.swap(1,0)
+        U.swap(2,1)
+        U.swap(3,2)
+        for q in range(4):
+            U.x(q)
+    U = U.to_gate()
+    U.name = f"7^{power} mod 15"
+    c_U = U.control()
+    return c_U
+
 
 def qft_dagger(n: int) -> QuantumCircuit:
     """
