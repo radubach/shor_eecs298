@@ -266,9 +266,6 @@ def mod_mult_gate(b: int, N: int) -> UnitaryGate:
     Args:
         b (int): The multiplier in the modular multiplication
         N (int): The modulus for the operation
-        n (int): The number of qubits in the target register
-                   needed to represent all possible numbers in 0 to N-1 
-        U (np.ndarray): The unitary matrix representing the modular multiplication
     
     Returns:
         UnitaryGate: A Qiskit UnitaryGate implementing the modular multiplication
@@ -277,7 +274,7 @@ def mod_mult_gate(b: int, N: int) -> UnitaryGate:
         ValueError: If the generated matrix is not unitary
     """
     n = floor(log(N - 1, 2)) + 1  # determine number of qubits in output register
-    U = np.zeros((2 ** n, 2 ** n))  # initialize the unitary n x n matrix
+    U = np.zeros((2 ** n, 2 ** n))  # initialize the unitary 2^n x 2^n matrix
     for x in range(N):
         U[b * x % N][x] = 1 # apply the modular multiplication to each basis state
     for x in range(N, 2 ** n):
