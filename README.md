@@ -35,11 +35,11 @@ Shor’s algorithm is a quantum algorithm that efficiently factors large integer
 
 ## 🧪 Code Structure
 
-<pre> ```
+<pre>
 /src # Helper functions for modular exponentiation, QFT, noise models, etc.
 /notebooks/initial # Local development notebooks for prototyping
 /notebooks/colab # Final Colab notebooks optimized for cloud execution
-``` </pre>
+</pre>
 
 ---
 
