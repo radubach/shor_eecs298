@@ -403,6 +403,7 @@ def find_factors_shor(N: int, MAX_ATTEMPTS: int = 20):
                     q_depth = qc.depth()
                     q_width = qc.width()
                     q_gates = qc.size()
+                    q_qubits = qc.num_qubits
                     q_factor = d
                     FACTOR_FOUND = True
                     print(f"    ✅ SUCCESS: factor = {q_factor}, time = {q_elapsed:.2f}s")
@@ -429,6 +430,7 @@ def find_factors_shor(N: int, MAX_ATTEMPTS: int = 20):
         "depth": [q_depth], 
         "width": [q_width], 
         "gates": [q_gates], 
+        "qubits": [q_qubits],
         "attempts": [q_attempts],
         "success": [FACTOR_FOUND]
     })
