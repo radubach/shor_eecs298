@@ -366,10 +366,10 @@ def make_custom_noise_model():
     noise_model = NoiseModel()
 
     # Depolarizing noise on 1-qubit gates (1% error rate)
-    one_q_error = depolarizing_error(0.01, 1)
+    one_q_error = depolarizing_error(0.0001, 1)
     
     # Depolarizing noise on 2-qubit gates (3% error rate)
-    two_q_error = depolarizing_error(0.03, 2)
+    two_q_error = depolarizing_error(0.005, 2)
 
     # Add to common gates used in your circuit
     noise_model.add_all_qubit_quantum_error(one_q_error, ['x', 'h', 'rz', 'sx'])
