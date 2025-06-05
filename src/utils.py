@@ -4,9 +4,12 @@ from qiskit_aer import AerSimulator
 from qiskit.quantum_info import Operator
 from qiskit.circuit.library import UnitaryGate, QFT
 from typing import List, Union, Tuple
-from math import floor, log
+from math import floor, log, gcd
 from fractions import Fraction
 from qiskit_aer.noise import NoiseModel, depolarizing_error, thermal_relaxation_error
+import time
+import random
+import pandas as pd
 
 
 
@@ -354,8 +357,110 @@ def find_order_quantum(a: int, N: int) -> Tuple[int, QuantumCircuit]:
         if r == 0:
             continue
         if pow(a, r, N) == 1:
-            return r, qc
+            return r, transpiled
+
+
+def find_factors_shor(N: int, MAX_ATTEMPTS: int = 20):
+    """
+    Find factors of N using Shor's algorithm (quantum simulation)
+    
+    Args:
+        N: Number to factor
+        MAX_ATTEMPTS: Maximum attempts before giving up
+    
+    Returns:
+        pandas.DataFrame: Single row with results for this N
+    """
+    print(f"\n🎯 Processing N = {N} (quantum simulation)...")
+    q_start = time.time()
+    q_attempts = 0
+    FACTOR_FOUND = False
+    
+    # Initialize result values
+    q_factor = -1
+    q_elapsed = -1
+    q_depth = -1
+    q_width = -1
+    q_gates = -1
+
+    while not FACTOR_FOUND and q_attempts < MAX_ATTEMPTS:
+        q_attempts += 1
+        a = random.choice([x for x in range(2, N) if gcd(x, N) == 1])
+        print(f"  ⏳ Attempt {q_attempts}: Trying a = {a}")
         
+        try:
+            r, qc = find_order_quantum(a, N)
+            print(f"    📊 Order found: r = {r}")
+            
+            if r % 2 == 0:
+                x = pow(a, r // 2, N) - 1
+                d = gcd(x, N)
+                print(f"    🔍 r even, gcd(a^(r/2)-1, N) = {d}")
+                
+                if d > 1:
+                    # SUCCESS!
+                    q_elapsed = time.time() - q_start
+                    q_depth = qc.depth()
+                    q_width = qc.width()
+                    q_gates = qc.size()
+                    q_qubits = qc.num_qubits
+                    q_factor = d
+                    FACTOR_FOUND = True
+                    print(f"    ✅ SUCCESS: factor = {q_factor}, time = {q_elapsed:.2f}s")
+                    print(f"       Circuit stats: depth = {q_depth}, width = {q_width}, gates = {q_gates}")
+                else:
+                    print(f"    ❌ Failed: gcd result = 1 → retry")
+            else:
+                print(f"    ❌ r is odd → retry")
+                
+        except Exception as e:
+            print(f"    💥 Exception for N={N}, a={a}: {e}")
+            continue
+
+    # Handle failure case
+    if not FACTOR_FOUND:
+        print(f"💔 Failed to find factor for N={N} after {MAX_ATTEMPTS} attempts.")
+        q_elapsed = time.time() - q_start  # Total time spent trying
+
+    # Create result DataFrame (always return something!)
+    result = pd.DataFrame({
+        "N": [N], 
+        "factor": [q_factor], 
+        "time": [q_elapsed],
+        "depth": [q_depth], 
+        "width": [q_width], 
+        "gates": [q_gates], 
+        "qubits": [q_qubits],
+        "attempts": [q_attempts],
+        "success": [FACTOR_FOUND]
+    })
+    
+    return result
+
+# Helper function to combine all results at the end
+def combine_results(*result_dfs):
+    """
+    Combine multiple result DataFrames into one
+    
+    Usage:
+        all_results = combine_results(results15, results21, results33, ...)
+    """
+    combined = pd.concat(result_dfs, ignore_index=True)
+    
+    # Add some summary statistics
+    successful = combined[combined['success'] == True]
+    
+    print(f"\n📈 SUMMARY STATISTICS:")
+    print(f"   • Total numbers tested: {len(combined)}")
+    print(f"   • Successful factorizations: {len(successful)}")
+    print(f"   • Success rate: {100*len(successful)/len(combined):.1f}%")
+    
+    if len(successful) > 0:
+        print(f"   • Average time (successful): {successful['time'].mean():.2f}s")
+        print(f"   • Average attempts (successful): {successful['attempts'].mean():.1f}")
+        print(f"   • Largest N factored: {successful['N'].max()}")
+    
+    return combined
 
 #########################################################
 # Custom Noise model, 
