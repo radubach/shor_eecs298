@@ -6,6 +6,7 @@ from qiskit.circuit.library import UnitaryGate, QFT
 from typing import List, Union, Tuple
 from math import floor, log
 from fractions import Fraction
+from qiskit_aer.noise import NoiseModel, depolarizing_error, thermal_relaxation_error
 
 
 
@@ -354,3 +355,47 @@ def find_order_quantum(a: int, N: int) -> Tuple[int, QuantumCircuit]:
             continue
         if pow(a, r, N) == 1:
             return r, qc
+        
+
+#########################################################
+# Custom Noise model, 
+# would use built in FakeBackend, but IBM will sunset it soon
+#########################################################
+
+def make_custom_noise_model():
+    noise_model = NoiseModel()
+
+    # Depolarizing noise on 1-qubit gates (1% error rate)
+    one_q_error = depolarizing_error(0.01, 1)
+    
+    # Depolarizing noise on 2-qubit gates (3% error rate)
+    two_q_error = depolarizing_error(0.03, 2)
+
+    # Add to common gates used in your circuit
+    noise_model.add_all_qubit_quantum_error(one_q_error, ['x', 'h', 'rz', 'sx'])
+    noise_model.add_all_qubit_quantum_error(two_q_error, ['cx'])
+
+    return noise_model
+
+
+def make_advanced_noise_model():
+    noise_model = NoiseModel()
+    
+    # Relaxation errors: T1 and T2 times (in microseconds)
+    t1 = 100e3  # 100 μs
+    t2 = 80e3   # 80 μs
+    gate_time_1q = 100  # ns
+    gate_time_2q = 300  # ns
+
+    # Thermal relaxation errors
+    relax_error_1q = thermal_relaxation_error(t1, t2, gate_time_1q)
+    relax_error_2q = thermal_relaxation_error(t1, t2, gate_time_2q).tensor(thermal_relaxation_error(t1, t2, gate_time_2q))
+
+    # Combine depolarizing + relaxation
+    one_q_error = depolarizing_error(0.01, 1).compose(relax_error_1q)
+    two_q_error = depolarizing_error(0.03, 2).compose(relax_error_2q)
+
+    noise_model.add_all_qubit_quantum_error(one_q_error, ['x', 'h', 'rz', 'sx'])
+    noise_model.add_all_qubit_quantum_error(two_q_error, ['cx'])
+
+    return noise_model
