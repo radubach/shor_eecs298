@@ -6,6 +6,7 @@ from qiskit.circuit.library import UnitaryGate, QFT
 from typing import List, Union, Tuple
 from math import floor, log
 from fractions import Fraction
+from qiskit_aer.noise import NoiseModel, depolarizing_error, thermal_relaxation_error
 
 
 
@@ -47,6 +48,12 @@ def create_unitary_gate(a: int, power: int, N: int = 15) -> UnitaryGate:
     U = modmul_matrix(a, power, N)
     return UnitaryGate(U)
 
+
+#########################################################
+# Note that this is not used in the final implementation
+# function uses non-standard convention for qubit ordering
+# standard convention is to have least significant qubit as the first one
+# #########################################################
 def c_amod15(a: int, power: int) -> UnitaryGate:
     """
     Creates a controlled modular multiplication gate for N=15.
@@ -87,6 +94,37 @@ def c_amod15(a: int, power: int) -> UnitaryGate:
     U.name = f"{a}^{power} mod 15"
     c_U = U.control()
     return c_U
+
+#########################################################
+# Note that this is not used in the final implementation
+# same as c_amod15 but uses standard qubit ordering
+# and only applies to a = 7
+# #########################################################
+def c_7mod15(power: int) -> UnitaryGate:
+    """
+    Creates a controlled modular multiplication gate for a = 7, N=15.
+    This is a specialized implementation for N=15 that uses SWAP and X gates.
+    
+    Args:
+        power (int): The power to raise 7 to
+    
+    Returns:
+        UnitaryGate: A controlled unitary gate implementing the modular multiplication
+    
+    """
+    
+    U = QuantumCircuit(4)
+    for iteration in range(power):
+        U.swap(1,0)
+        U.swap(2,1)
+        U.swap(3,2)
+        for q in range(4):
+            U.x(q)
+    U = U.to_gate()
+    U.name = f"7^{power} mod 15"
+    c_U = U.control()
+    return c_U
+
 
 def qft_dagger(n: int) -> QuantumCircuit:
     """
@@ -317,3 +355,96 @@ def find_order_quantum(a: int, N: int) -> Tuple[int, QuantumCircuit]:
             continue
         if pow(a, r, N) == 1:
             return r, qc
+        
+
+#########################################################
+# Custom Noise model, 
+# would use built in FakeBackend, but IBM will sunset it soon
+#########################################################
+
+def make_custom_noise_model(one_qubit_error=0.001, two_qubit_error=0.01):
+    """
+    Create a custom noise model with configurable error rates
+    
+    Args:
+        one_qubit_error (float): Error rate for single-qubit gates (default: 0.001 = 0.1%)
+        two_qubit_error (float): Error rate for two-qubit gates (default: 0.01 = 1%)
+    
+    Returns:
+        NoiseModel: Configured noise model for quantum simulation
+    
+    Example usage:
+        # Conservative (default)
+        noise = make_custom_noise_model()
+        
+        # Optimistic
+        noise = make_custom_noise_model(one_qubit_error=0.0001, two_qubit_error=0.005)
+        
+        # Pessimistic  
+        noise = make_custom_noise_model(one_qubit_error=0.002, two_qubit_error=0.02)
+        
+        # Near-perfect (for testing)
+        noise = make_custom_noise_model(one_qubit_error=0.00001, two_qubit_error=0.0001)
+    """
+    noise_model = NoiseModel()
+
+    # Depolarizing noise on 1-qubit gates
+    one_q_error = depolarizing_error(one_qubit_error, 1)
+    
+    # Depolarizing noise on 2-qubit gates  
+    two_q_error = depolarizing_error(two_qubit_error, 2)
+
+    # Add to common gates used in quantum circuits
+    noise_model.add_all_qubit_quantum_error(one_q_error, ['x', 'h', 'rz', 'sx'])
+    noise_model.add_all_qubit_quantum_error(two_q_error, ['cx'])
+
+    # Print the configuration for reference
+    print(f"Noise Model Configuration:")
+    print(f"  1-qubit gates: {one_qubit_error*100:.3f}% error rate")
+    print(f"  2-qubit gates: {two_qubit_error*100:.3f}% error rate")
+
+    return noise_model
+
+# Convenience functions for common configurations
+def conservative_noise():
+    """Conservative noise model (current average hardware)"""
+    return make_custom_noise_model(0.001, 0.01)
+
+def optimistic_noise():
+    """Optimistic noise model (best current hardware)"""
+    return make_custom_noise_model(0.0005, 0.005)
+
+def pessimistic_noise():
+    """Pessimistic noise model (older/noisier hardware)"""
+    return make_custom_noise_model(0.002, 0.02)
+
+def near_perfect_noise():
+    """Near-perfect noise model (future target)"""
+    return make_custom_noise_model(0.0001, 0.001)
+
+def your_original_noise():
+    """Your original noise model settings"""
+    return make_custom_noise_model(0.0001, 0.005)
+
+
+def make_advanced_noise_model():
+    noise_model = NoiseModel()
+    
+    # Relaxation errors: T1 and T2 times (in microseconds)
+    t1 = 100e3  # 100 μs
+    t2 = 80e3   # 80 μs
+    gate_time_1q = 100  # ns
+    gate_time_2q = 300  # ns
+
+    # Thermal relaxation errors
+    relax_error_1q = thermal_relaxation_error(t1, t2, gate_time_1q)
+    relax_error_2q = thermal_relaxation_error(t1, t2, gate_time_2q).tensor(thermal_relaxation_error(t1, t2, gate_time_2q))
+
+    # Combine depolarizing + relaxation
+    one_q_error = depolarizing_error(0.01, 1).compose(relax_error_1q)
+    two_q_error = depolarizing_error(0.03, 2).compose(relax_error_2q)
+
+    noise_model.add_all_qubit_quantum_error(one_q_error, ['x', 'h', 'rz', 'sx'])
+    noise_model.add_all_qubit_quantum_error(two_q_error, ['cx'])
+
+    return noise_model
