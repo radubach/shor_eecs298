@@ -362,20 +362,69 @@ def find_order_quantum(a: int, N: int) -> Tuple[int, QuantumCircuit]:
 # would use built in FakeBackend, but IBM will sunset it soon
 #########################################################
 
-def make_custom_noise_model():
+def make_custom_noise_model(one_qubit_error=0.001, two_qubit_error=0.01):
+    """
+    Create a custom noise model with configurable error rates
+    
+    Args:
+        one_qubit_error (float): Error rate for single-qubit gates (default: 0.001 = 0.1%)
+        two_qubit_error (float): Error rate for two-qubit gates (default: 0.01 = 1%)
+    
+    Returns:
+        NoiseModel: Configured noise model for quantum simulation
+    
+    Example usage:
+        # Conservative (default)
+        noise = make_custom_noise_model()
+        
+        # Optimistic
+        noise = make_custom_noise_model(one_qubit_error=0.0001, two_qubit_error=0.005)
+        
+        # Pessimistic  
+        noise = make_custom_noise_model(one_qubit_error=0.002, two_qubit_error=0.02)
+        
+        # Near-perfect (for testing)
+        noise = make_custom_noise_model(one_qubit_error=0.00001, two_qubit_error=0.0001)
+    """
     noise_model = NoiseModel()
 
-    # Depolarizing noise on 1-qubit gates (1% error rate)
-    one_q_error = depolarizing_error(0.0001, 1)
+    # Depolarizing noise on 1-qubit gates
+    one_q_error = depolarizing_error(one_qubit_error, 1)
     
-    # Depolarizing noise on 2-qubit gates (3% error rate)
-    two_q_error = depolarizing_error(0.005, 2)
+    # Depolarizing noise on 2-qubit gates  
+    two_q_error = depolarizing_error(two_qubit_error, 2)
 
-    # Add to common gates used in your circuit
+    # Add to common gates used in quantum circuits
     noise_model.add_all_qubit_quantum_error(one_q_error, ['x', 'h', 'rz', 'sx'])
     noise_model.add_all_qubit_quantum_error(two_q_error, ['cx'])
 
+    # Print the configuration for reference
+    print(f"Noise Model Configuration:")
+    print(f"  1-qubit gates: {one_qubit_error*100:.3f}% error rate")
+    print(f"  2-qubit gates: {two_qubit_error*100:.3f}% error rate")
+
     return noise_model
+
+# Convenience functions for common configurations
+def conservative_noise():
+    """Conservative noise model (current average hardware)"""
+    return make_custom_noise_model(0.001, 0.01)
+
+def optimistic_noise():
+    """Optimistic noise model (best current hardware)"""
+    return make_custom_noise_model(0.0005, 0.005)
+
+def pessimistic_noise():
+    """Pessimistic noise model (older/noisier hardware)"""
+    return make_custom_noise_model(0.002, 0.02)
+
+def near_perfect_noise():
+    """Near-perfect noise model (future target)"""
+    return make_custom_noise_model(0.0001, 0.001)
+
+def your_original_noise():
+    """Your original noise model settings"""
+    return make_custom_noise_model(0.0001, 0.005)
 
 
 def make_advanced_noise_model():
